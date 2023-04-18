@@ -1,0 +1,6 @@
+{
+    "webcam_ports": [1, 2],
+    "image_amount": 5,
+    "countdown_time": 1,
+    "time_between_pictures": 3
+}

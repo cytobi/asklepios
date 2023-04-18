@@ -1,4 +1,4 @@
-# todo: json for config, maybe true multi-threading, error handling, comments, user guidance, potentially different key to exit
+# todo: maybe true multi-threading, error handling, comments, user guidance, potentially different key to exit
 # issues: no point in async if we can't wait in main thread and constantly have to check for keypresses (results in not being able to take pictures on two cams at the same time)
 
 import cv2  # for video capture
@@ -6,23 +6,24 @@ import keyboard  # for keypress detection
 import os  # for directory creation
 import asyncio  # for async functions
 import time  # to check time between pictures
+import json  # for config
 
 
 debug = True  # set to True to enable debug prints
 
-webcam_ports = [1, 2]  # list of ports for the webcams that shall be used
+webcam_ports = []  # list of ports for the webcams that shall be used
 
 cwd = os.getcwd()  # current working directory
 
 dir = cwd + "\data\\"  # directory to save the frames to
 
-image_amount = 5  # number of different frames to save
+image_amount = 5  # number of different frames to save, default is 5
 
 next_image = 0  # next image number
 
-countdown_time = 1  # time in seconds to wait before taking a picture
+countdown_time = 3  # time in seconds to wait before taking a picture, default is 3
 
-time_between_pictures = 3  # time in seconds between pictures
+time_between_pictures = 20  # time in seconds between pictures, default is 20
 
 time_of_last_picture = []  # time of last picture
 
@@ -61,7 +62,19 @@ async def handle_keypress(keypress, vc, webcam_amount):
 
 # main function
 async def main():
+    global webcam_ports, image_amount, countdown_time, time_between_pictures, time_of_last_picture
+
     running = True  # set to False to stop the program
+
+    # load config
+    config_file = open(cwd + "\config\config.json")  # open config file
+    config = json.load(config_file)  # load config file
+    config_file.close()  # close config file
+    # set variables from config
+    webcam_ports = config["webcam_ports"]
+    image_amount = config["image_amount"]
+    countdown_time = config["countdown_time"]
+    time_between_pictures = config["time_between_pictures"]
 
     # open all video captures
     vc = []
