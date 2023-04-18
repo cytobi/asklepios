@@ -30,8 +30,13 @@ if len(possible_sources) == 0:
     exit()
 
 # open the first source found
-print("using source: " + str(possible_sources[0]))
-vc = cv2.VideoCapture(possible_sources[0])
+try:
+    src_to_use = int(input("Which source should be used?: "))
+except:
+    print("using default source: " + str(possible_sources[0]))
+    src_to_use = possible_sources[0]
+
+vc = cv2.VideoCapture(src_to_use)
 if vc.isOpened():  # try to get the first frame
     rval, frame = vc.read()
 else:
