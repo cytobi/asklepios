@@ -1,12 +1,11 @@
-# todo: maybe true multi-threading, error handling, comments, user guidance, potentially different key to exit
-# issues: no point in async if we can't wait in main thread and constantly have to check for keypresses (results in not being able to take pictures on two cams at the same time)
+# todo: more debug prints, error handling, user guidance, potentially different key to exit
 
 import cv2  # for video capture
 import keyboard  # for keypress detection
 import os  # for directory creation
-import asyncio  # for async functions
 import time  # to check time between pictures
 import json  # for config
+import threading  # for multi-threading
 
 
 debug = True  # set to True to enable debug prints
@@ -27,13 +26,15 @@ time_between_pictures = 20  # time in seconds between pictures, default is 20
 
 time_of_last_picture = []  # time of last picture
 
+running = True  # set to False to stop the program
+
 
 def debug_print(to_print):
     if debug:
         print(to_print)
 
 
-async def save_frame(frame):
+def save_frame(frame):
     global next_image
     filename = "image" + str(next_image) + ".png"  # name of the file to save
     debug_print("...to " + dir + filename)
@@ -43,28 +44,30 @@ async def save_frame(frame):
     cv2.imwrite(dir + filename, frame)  # save the frame
 
 
-async def handle_keypress(keypress, vc, webcam_amount):
-    # check for keypresses for each webcam
-    for i in range(webcam_amount):
-        # tests a for cam 0, b for cam 1, etc. and checks if the time between pictures is long enough
-        if (
-            keypress == chr(ord("a") + i)
-            and abs(time.time() - time_of_last_picture[i]) > time_between_pictures
-        ):
-            await asyncio.sleep(countdown_time)  # wait for countdown_time seconds
-            debug_print("writing frame of cam " + str(i) + " to...")
-            rval, frame = vc[i].read()  # read frame
-            rval, frame = vc[i].read()  # read a second frame to avoid lag
-            await save_frame(frame)  # save frame
-            # set time_of_last_picture to current time
-            time_of_last_picture[i] = time.time()
+def handle_one_webcam(i, vc, time_of_last_picture):
+    global running
+    key_to_observe = chr(ord("a") + i)  # key to observe for this webcam
+    while True:
+        # check for keypress on observed key
+        if keyboard.is_pressed(key_to_observe):
+            # check if the time between pictures is long enough
+            if abs(time.time() - time_of_last_picture[i]) > time_between_pictures:
+                time.sleep(countdown_time)  # wait for countdown_time seconds
+                debug_print("writing frame of cam " + str(i) + " to...")
+                rval, frame = vc[i].read()  # read frame
+                rval, frame = vc[i].read()  # read a second frame to avoid lag
+                save_frame(frame)  # save frame
+                # set time_of_last_picture to current time
+                time_of_last_picture[i] = time.time()
+
+        # check if program should terminate, if so, break out of loop and terminate thread
+        if not running:
+            break
 
 
 # main function
-async def main():
-    global webcam_ports, image_amount, countdown_time, time_between_pictures, time_of_last_picture
-
-    running = True  # set to False to stop the program
+def main():
+    global webcam_ports, image_amount, countdown_time, time_between_pictures, time_of_last_picture, running
 
     # load config
     config_file = open(cwd + "\config\config.json")  # open config file
@@ -99,21 +102,35 @@ async def main():
 
     webcam_amount = len(vc)  # amount of webcams that are being used
 
+    # register threads for each webcam
+    threads = []
+    for i in range(webcam_amount):
+        threads.append(
+            threading.Thread(
+                target=handle_one_webcam, args=(i, vc, time_of_last_picture)
+            )
+        )
+
+    # start all threads
+    for i in threads:
+        i.start()
+
     # user guidance
     print("press ESC to exit or press Ctrl+C in the terminal for a hard stop")
 
     # main loop
     while running:
-        keypress = keyboard.read_key()  # read keypress
-        await handle_keypress(keypress, vc, webcam_amount)
-
         # exit if esc is pressed
-        if keypress == "esc":
+        if keyboard.is_pressed("esc"):
             running = False
+
+    # wait for all threads to finish
+    for i in threads:
+        i.join()
 
     # close all video captures
     for i in vc:
         i.release()
 
 
-asyncio.run(main())
+main()
