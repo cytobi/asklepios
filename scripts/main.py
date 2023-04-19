@@ -79,6 +79,11 @@ def main():
 
     print("starting...")
 
+    # create data directory if it does not exist
+    if not os.path.exists(dir):
+        debug_print("creating data directory...")
+        os.makedirs(dir)
+
     # load config
     debug_print("loading config...")
     config_file = open(cwd + "\config\config.json")  # open config file
