@@ -3,5 +3,7 @@
     "image_amount": 5,
     "countdown_time": 1,
     "time_between_pictures": 3,
-    "exit_button": "esc"
+    "exit_button": "esc",
+    "use_custom_webcam_keys": false,
+    "custom_webcam_keys": ["q", "w"]
 }

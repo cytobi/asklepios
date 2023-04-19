@@ -8,13 +8,15 @@ import json  # for config
 import threading  # for multi-threading
 
 
-debug = False  # set to True to enable debug prints
+debug = True  # set to True to enable debug prints
 
 webcam_ports = []  # list of ports for the webcams that shall be used
 image_amount = 5  # number of different frames to save, default is 5
 countdown_time = 3  # time in seconds to wait before taking a picture, default is 3
 time_between_pictures = 20  # time in seconds between pictures, default is 20
 exit_button = "esc"  # key to exit the program, default is "esc"
+custom_webcam_keys = []  # list of custom keys, must be same order as webcam_ports
+use_custom_webcam_keys = False  # set to True to use custom keys, default is False
 
 cwd = os.getcwd()  # current working directory
 dir = cwd + "\data\\"  # directory to save the frames to
@@ -41,10 +43,13 @@ def save_frame(frame):
     cv2.imwrite(dir + filename, frame)  # save the frame
 
 
-def handle_one_webcam(i, vc, time_of_last_picture):
+def handle_one_webcam(i, vc, time_of_last_picture, custom_key):
     global running
     debug_print("started thread for webcam " + str(i))
-    key_to_observe = chr(ord("a") + i)  # key to observe for this webcam
+    if custom_key != "":  # check if custom key is set
+        key_to_observe = custom_key  # use custom key
+    else:
+        key_to_observe = chr(ord("a") + i)  # calculate key to observe for this webcam
     while True:
         # check for keypress on observed key
         if keyboard.is_pressed(key_to_observe):
@@ -70,7 +75,7 @@ def handle_one_webcam(i, vc, time_of_last_picture):
 
 # main function
 def main():
-    global webcam_ports, image_amount, countdown_time, time_between_pictures, exit_button, time_of_last_picture, running
+    global webcam_ports, image_amount, countdown_time, time_between_pictures, exit_button, custom_webcam_keys, use_custom_webcam_keys, time_of_last_picture, running
 
     print("starting...")
 
@@ -85,6 +90,9 @@ def main():
     countdown_time = config["countdown_time"]
     time_between_pictures = config["time_between_pictures"]
     exit_button = config["exit_button"]
+    use_custom_webcam_keys = config["use_custom_webcam_keys"]
+    if use_custom_webcam_keys:
+        custom_webcam_keys = config["custom_webcam_keys"]
 
     # open all video captures
     debug_print("opening video captures...")
@@ -96,6 +104,10 @@ def main():
 
             # add 0 to time_of_last_picture for each webcam
             time_of_last_picture.append(0)
+
+            if not use_custom_webcam_keys:
+                # add none to custom_webcam_keys for each webcam if custom keys are not used
+                custom_webcam_keys.append("")
 
     # check for errors in opening the video captures
     if len(webcam_ports) == 0:
@@ -110,13 +122,23 @@ def main():
 
     webcam_amount = len(vc)  # amount of webcams that are being used
 
+    # check if correct amount of custom keys is specified
+
+    if len(custom_webcam_keys) != webcam_amount:
+        if use_custom_webcam_keys:
+            print("error: wrong amount of custom keys specified")
+        else:
+            print("error: appending '' to custom keys failed")
+        exit()
+
     # register threads for each webcam
     debug_print("registering threads...")
     threads = []
     for i in range(webcam_amount):
         threads.append(
             threading.Thread(
-                target=handle_one_webcam, args=(i, vc, time_of_last_picture)
+                target=handle_one_webcam,
+                args=(i, vc, time_of_last_picture, custom_webcam_keys[i]),
             )
         )
 
