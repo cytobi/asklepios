@@ -1,4 +1,4 @@
-# todo: error handling, potentially different key to exit (config)
+# todo: error handling
 
 import cv2  # for video capture
 import keyboard  # for keypress detection
@@ -14,6 +14,7 @@ webcam_ports = []  # list of ports for the webcams that shall be used
 image_amount = 5  # number of different frames to save, default is 5
 countdown_time = 3  # time in seconds to wait before taking a picture, default is 3
 time_between_pictures = 20  # time in seconds between pictures, default is 20
+exit_button = "esc"  # key to exit the program, default is "esc"
 
 cwd = os.getcwd()  # current working directory
 dir = cwd + "\data\\"  # directory to save the frames to
@@ -69,7 +70,7 @@ def handle_one_webcam(i, vc, time_of_last_picture):
 
 # main function
 def main():
-    global webcam_ports, image_amount, countdown_time, time_between_pictures, time_of_last_picture, running
+    global webcam_ports, image_amount, countdown_time, time_between_pictures, exit_button, time_of_last_picture, running
 
     print("starting...")
 
@@ -83,6 +84,7 @@ def main():
     image_amount = config["image_amount"]
     countdown_time = config["countdown_time"]
     time_between_pictures = config["time_between_pictures"]
+    exit_button = config["exit_button"]
 
     # open all video captures
     debug_print("opening video captures...")
@@ -125,12 +127,16 @@ def main():
 
     # user guidance
     print("started")
-    print("press ESC to exit or press Ctrl+C in the terminal for a hard stop")
+    print(
+        "press "
+        + exit_button.upper()
+        + " to exit or press Ctrl+C in the terminal for a hard stop"
+    )
 
     # main loop
     while running:
         # exit if esc is pressed
-        if keyboard.is_pressed("esc"):
+        if keyboard.is_pressed(exit_button):
             running = False
 
     print("exiting...")
