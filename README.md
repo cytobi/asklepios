@@ -20,6 +20,7 @@ developed for windows with python 3.11.3
 - if you wish to change some config (e.g. the ports your webcams use, the countdown time, etc) open the config.json file in the config folder with your editor of choice and change the desired values
 
 ## contributors
+
 - [cytobi](https://github.com/cytobi)
 
 ## license
