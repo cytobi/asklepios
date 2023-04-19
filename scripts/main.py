@@ -1,4 +1,5 @@
 # todo: error handling
+# issue: if button is continuously pressed, cpu usage is high. could be solved with sleep, but then the button might not be recognized
 
 import cv2  # for video capture
 import keyboard  # for keypress detection
@@ -71,6 +72,7 @@ def handle_one_webcam(i, vc, time_of_last_picture, custom_key):
         if not running:
             debug_print("thread for webcam " + str(i) + " is terminating")
             break
+        # time.sleep(0.05)  # wait shortly to reduce cpu usage
 
 
 # main function
