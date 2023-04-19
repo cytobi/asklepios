@@ -9,7 +9,7 @@ import json  # for config
 import threading  # for multi-threading
 
 
-debug = True  # set to True to enable debug prints
+debug = False  # set to True to enable debug prints
 
 webcam_ports = []  # list of ports for the webcams that shall be used
 image_amount = 5  # number of different frames to save, default is 5
@@ -72,7 +72,7 @@ def handle_one_webcam(i, vc, time_of_last_picture, custom_key):
         if not running:
             debug_print("thread for webcam " + str(i) + " is terminating")
             break
-        # time.sleep(0.05)  # wait shortly to reduce cpu usage
+        time.sleep(0.03)  # wait shortly to reduce cpu usage
 
 
 # main function
