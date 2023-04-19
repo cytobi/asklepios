@@ -18,6 +18,11 @@ developed for windows with python 3.11.3
   - test which ports your webcams use: `python scripts/webcam_test.py`
   - run the main script: `python scripts/main.py`
 - if you wish to change some config (e.g. the ports your webcams use, the countdown time, etc) open the config.json file in the config folder with your editor of choice and change the desired values
+- creating an obs slideshow with this
+  - before you create the slideshow make sure there are already images in the data folder (e.g. by taking them with the main script or manually adding image0.png to imageX.png)
+  - in obs create an "Image Slide Show" source and configure as desired
+  - in the "Image Files" field add the data directory
+  - now whenever the main script updates the images in the data folder they show up in your slide show
 
 ## contributors
 
