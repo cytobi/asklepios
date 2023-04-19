@@ -1,4 +1,4 @@
-# todo: more debug prints, error handling, user guidance, potentially different key to exit
+# todo: error handling, potentially different key to exit (config)
 
 import cv2  # for video capture
 import keyboard  # for keypress detection
@@ -8,21 +8,17 @@ import json  # for config
 import threading  # for multi-threading
 
 
-debug = True  # set to True to enable debug prints
+debug = False  # set to True to enable debug prints
 
 webcam_ports = []  # list of ports for the webcams that shall be used
+image_amount = 5  # number of different frames to save, default is 5
+countdown_time = 3  # time in seconds to wait before taking a picture, default is 3
+time_between_pictures = 20  # time in seconds between pictures, default is 20
 
 cwd = os.getcwd()  # current working directory
-
 dir = cwd + "\data\\"  # directory to save the frames to
 
-image_amount = 5  # number of different frames to save, default is 5
-
 next_image = 0  # next image number
-
-countdown_time = 3  # time in seconds to wait before taking a picture, default is 3
-
-time_between_pictures = 20  # time in seconds between pictures, default is 20
 
 time_of_last_picture = []  # time of last picture
 
@@ -46,12 +42,17 @@ def save_frame(frame):
 
 def handle_one_webcam(i, vc, time_of_last_picture):
     global running
+    debug_print("started thread for webcam " + str(i))
     key_to_observe = chr(ord("a") + i)  # key to observe for this webcam
     while True:
         # check for keypress on observed key
         if keyboard.is_pressed(key_to_observe):
+            debug_print("key " + key_to_observe + " was pressed")
             # check if the time between pictures is long enough
             if abs(time.time() - time_of_last_picture[i]) > time_between_pictures:
+                debug_print(
+                    "picture will be taken in " + str(countdown_time) + " seconds"
+                )
                 time.sleep(countdown_time)  # wait for countdown_time seconds
                 debug_print("writing frame of cam " + str(i) + " to...")
                 rval, frame = vc[i].read()  # read frame
@@ -62,6 +63,7 @@ def handle_one_webcam(i, vc, time_of_last_picture):
 
         # check if program should terminate, if so, break out of loop and terminate thread
         if not running:
+            debug_print("thread for webcam " + str(i) + " is terminating")
             break
 
 
@@ -69,7 +71,10 @@ def handle_one_webcam(i, vc, time_of_last_picture):
 def main():
     global webcam_ports, image_amount, countdown_time, time_between_pictures, time_of_last_picture, running
 
+    print("starting...")
+
     # load config
+    debug_print("loading config...")
     config_file = open(cwd + "\config\config.json")  # open config file
     config = json.load(config_file)  # load config file
     config_file.close()  # close config file
@@ -80,6 +85,7 @@ def main():
     time_between_pictures = config["time_between_pictures"]
 
     # open all video captures
+    debug_print("opening video captures...")
     vc = []
     for port in webcam_ports:
         temp_vc = cv2.VideoCapture(port)
@@ -103,6 +109,7 @@ def main():
     webcam_amount = len(vc)  # amount of webcams that are being used
 
     # register threads for each webcam
+    debug_print("registering threads...")
     threads = []
     for i in range(webcam_amount):
         threads.append(
@@ -112,10 +119,12 @@ def main():
         )
 
     # start all threads
+    debug_print("starting threads...")
     for i in threads:
         i.start()
 
     # user guidance
+    print("started")
     print("press ESC to exit or press Ctrl+C in the terminal for a hard stop")
 
     # main loop
@@ -124,11 +133,15 @@ def main():
         if keyboard.is_pressed("esc"):
             running = False
 
+    print("exiting...")
+
     # wait for all threads to finish
+    debug_print("waiting for threads to finish...")
     for i in threads:
         i.join()
 
     # close all video captures
+    debug_print("closing video captures...")
     for i in vc:
         i.release()
 
