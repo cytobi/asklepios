@@ -4,6 +4,8 @@ a tool to grab frames from a webcam and put them into an already running obs sli
 
 developed for windows with python 3.11.3
 
+successfully deployed at [Medis 2023](https://de.wikipedia.org/wiki/Medimeisterschaften#Medimeisterschaften_2023)
+
 ## detailed usage guide
 
 ### notes
